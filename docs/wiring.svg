@@ -1,0 +1,169 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="860" viewBox="0 0 1200 860" font-family="Inter, Helvetica, Arial, sans-serif">
+  <style>
+    .panel { fill: #F8FAFC; stroke: #E2E8F0; stroke-width: 2; }
+    .box { fill: #FFFFFF; stroke: #334155; stroke-width: 2; }
+    .esp { fill: #FFF7ED; stroke: #EA580C; stroke-width: 2.5; }
+    .lin { fill: #EFF6FF; stroke: #2563EB; stroke-width: 2.5; }
+    .zone { fill: none; stroke: #94A3B8; stroke-width: 1.5; stroke-dasharray: 6 5; }
+    .wire { fill: none; stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; }
+    .term { fill: #FFFFFF; stroke: #334155; stroke-width: 2; }
+    .h1 { font-size: 24px; font-weight: 700; fill: #0F172A; }
+    .h2 { font-size: 17px; font-weight: 700; fill: #0F172A; }
+    .lbl { font-size: 14px; fill: #1E293B; }
+    .sm { font-size: 12.5px; fill: #475569; }
+    .pin { font-size: 13px; font-weight: 600; fill: #1E293B; }
+    .net { font-size: 12.5px; font-weight: 700; }
+  </style>
+  <rect width="1200" height="860" fill="#FFFFFF"/>
+  <text class="h1" x="40" y="44">O General legacy wired remote — MITM bridge wiring</text>
+
+  <!-- ============ PANEL 1: on the bus ============ -->
+  <rect class="panel" x="20" y="64" width="1160" height="300" rx="14"/>
+  <text class="h2" x="40" y="94">1 · At the wall remote: cut only the white signal wire</text>
+
+  <!-- indoor unit -->
+  <rect class="box" x="40" y="120" width="210" height="200" rx="10"/>
+  <text class="h2" x="58" y="148">Indoor unit</text>
+  <text class="sm" x="58" y="168">terminal block</text>
+  <text class="sm" x="58" y="184">"REMOTE CONTROL" (CN17)</text>
+  <circle class="term" cx="230" cy="215" r="6"/><text class="pin" x="200" y="220" text-anchor="end">1</text>
+  <circle class="term" cx="230" cy="255" r="6"/><text class="pin" x="200" y="260" text-anchor="end">2</text>
+  <circle class="term" cx="230" cy="295" r="6"/><text class="pin" x="200" y="300" text-anchor="end">3</text>
+
+  <!-- existing cable -->
+  <path class="wire" stroke="#DC2626" d="M236 215 H700"/>
+  <path class="wire" stroke="#7C3AED" d="M236 255 H560"/>
+  <path class="wire" stroke="#111827" d="M236 295 H700"/>
+  <text class="sm" x="300" y="205">red · +12 V</text>
+  <text class="sm" x="300" y="245">white · signal (AC side)</text>
+  <text class="sm" x="300" y="285">black · GND</text>
+  <text class="sm" x="300" y="330">existing cable — unchanged</text>
+
+  <!-- remote zone -->
+  <rect class="zone" x="520" y="108" width="400" height="236" rx="10"/>
+  <text class="sm" x="534" y="128">wall remote back box</text>
+  <rect class="box" x="720" y="150" width="180" height="170" rx="10"/>
+  <text class="h2" x="790" y="182">Wall</text>
+  <text class="h2" x="790" y="202">remote</text>
+  <circle class="term" cx="706" cy="215" r="6"/><text class="pin" x="740" y="220">1</text>
+  <circle class="term" cx="706" cy="255" r="6"/><text class="pin" x="740" y="260">2</text>
+  <circle class="term" cx="706" cy="295" r="6"/><text class="pin" x="740" y="300">3</text>
+
+  <!-- the cut -->
+  <path class="wire" stroke="#EA580C" d="M700 255 H650"/>
+  <line x1="592" y1="243" x2="612" y2="267" stroke="#DC2626" stroke-width="3"/>
+  <line x1="612" y1="243" x2="592" y2="267" stroke="#DC2626" stroke-width="3"/>
+  <text class="net" x="586" y="236" fill="#DC2626">CUT</text>
+
+  <!-- taps going down to the bridge cable (red hops over the black wire) -->
+  <circle cx="670" cy="215" r="5" fill="#DC2626"/>
+  <circle cx="690" cy="295" r="5" fill="#111827"/>
+  <path class="wire" stroke="#DC2626" d="M670 215 V287 A8 8 0 0 0 670 303 V364"/>
+  <path class="wire" stroke="#7C3AED" d="M560 255 Q545 255 545 270 V287 A8 8 0 0 0 545 303 V364"/>
+  <path class="wire" stroke="#EA580C" d="M650 255 V287 A8 8 0 0 0 650 303 V364"/>
+  <path class="wire" stroke="#111827" d="M690 295 V364"/>
+  <text class="sm" x="940" y="190">New 4-core cable to the bridge:</text>
+  <text class="sm" x="940" y="210">· pair 1: +12 V / GND</text>
+  <text class="sm" x="940" y="230">· pair 2: white from the AC → "B",</text>
+  <text class="sm" x="958" y="248">remote terminal 2 → "A"</text>
+  <text class="sm" x="940" y="276">Measure 1/2/3 with a meter first:</text>
+  <text class="sm" x="958" y="294">colours may differ on your unit.</text>
+
+  <!-- ============ PANEL 2: bridge ============ -->
+  <rect class="panel" x="20" y="364" width="1160" height="476" rx="14"/>
+  <text class="h2" x="730" y="396">2 · Bridge board</text>
+  <text class="sm" x="730" y="416">Seeed XIAO ESP32-C6 + 2× TJA1021 LIN module</text>
+
+  <!-- cable drops into J1 (nested so nothing crosses) -->
+  <path class="wire" stroke="#7C3AED" d="M545 364 V404 Q545 412 537 412 H38 Q30 412 30 420 V700"/>
+  <path class="wire" stroke="#EA580C" d="M650 364 V410 Q650 420 640 420 H54 Q46 420 46 428 V560"/>
+  <path class="wire" stroke="#DC2626" d="M670 364 V418 Q670 428 660 428 H72 Q64 428 64 436 V490"/>
+  <path class="wire" stroke="#111827" d="M690 364 V426 Q690 436 680 436 H98 Q90 436 90 444 V450"/>
+
+  <circle class="term" cx="90" cy="450" r="6"/>
+  <circle class="term" cx="64" cy="490" r="6"/>
+  <circle class="term" cx="46" cy="560" r="6"/>
+  <circle class="term" cx="30" cy="700" r="6"/>
+
+  <!-- GND and +12 V via PTC -->
+  <path class="wire" stroke="#111827" d="M96 450 H236"/>
+  <text class="net" x="242" y="455" fill="#111827">GND</text>
+  <path class="wire" stroke="#DC2626" d="M70 490 H140"/>
+  <rect x="140" y="478" width="56" height="24" rx="4" fill="#FEF2F2" stroke="#DC2626" stroke-width="2"/>
+  <text class="pin" x="168" y="495" text-anchor="middle">PTC</text>
+  <text class="sm" x="202" y="510">0.25 A</text>
+  <path class="wire" stroke="#DC2626" d="M196 490 H236"/>
+  <text class="net" x="242" y="495" fill="#DC2626">+12V</text>
+
+  <!-- TJA1021 A (remote side) -->
+  <rect class="lin" x="330" y="520" width="200" height="120" rx="10"/>
+  <text class="h2" x="350" y="546">TJA1021 "A"</text>
+  <text class="sm" x="350" y="564">wall remote side</text>
+  <path class="wire" stroke="#EA580C" d="M52 560 H262 Q270 560 270 568 V580 H330"/>
+  <text class="pin" x="340" y="585">LIN</text>
+  <path class="wire" stroke="#DC2626" d="M300 605 H330"/><text class="net" x="296" y="610" text-anchor="end" fill="#DC2626">+12V</text>
+  <text class="pin" x="340" y="610">12V</text>
+  <path class="wire" stroke="#111827" d="M300 628 H330"/><text class="net" x="296" y="633" text-anchor="end" fill="#111827">GND</text>
+  <text class="pin" x="340" y="633">GND</text>
+  <text class="pin" x="520" y="585" text-anchor="end">RXD</text>
+  <text class="pin" x="520" y="610" text-anchor="end">TXD</text>
+  <text class="pin" x="520" y="633" text-anchor="end">SLP</text>
+
+  <!-- TJA1021 B (AC side) -->
+  <rect class="lin" x="330" y="680" width="200" height="120" rx="10"/>
+  <text class="h2" x="350" y="706">TJA1021 "B"</text>
+  <text class="sm" x="350" y="724">indoor unit side</text>
+  <path class="wire" stroke="#7C3AED" d="M36 700 H262 Q270 700 270 708 V740 H330"/>
+  <text class="pin" x="340" y="745">LIN</text>
+  <path class="wire" stroke="#DC2626" d="M300 765 H330"/><text class="net" x="296" y="770" text-anchor="end" fill="#DC2626">+12V</text>
+  <text class="pin" x="340" y="770">12V</text>
+  <path class="wire" stroke="#111827" d="M300 788 H330"/><text class="net" x="296" y="793" text-anchor="end" fill="#111827">GND</text>
+  <text class="pin" x="340" y="793">GND</text>
+  <text class="pin" x="520" y="745" text-anchor="end">RXD</text>
+  <text class="pin" x="520" y="770" text-anchor="end">TXD</text>
+  <text class="pin" x="520" y="793" text-anchor="end">SLP</text>
+
+  <!-- logic wires -->
+  <path class="wire" stroke="#059669" d="M530 580 H760"/>
+  <path class="wire" stroke="#0D9488" d="M530 605 H760"/>
+  <path class="wire" stroke="#059669" d="M530 740 H690 Q700 740 700 730 V665 Q700 655 710 655 H760"/>
+  <path class="wire" stroke="#0D9488" d="M530 765 H710 Q720 765 720 755 V690 Q720 680 730 680 H760"/>
+  <text class="sm" x="560" y="572">RXD → GPIO17</text>
+  <text class="sm" x="560" y="622">GPIO16 → TXD</text>
+  <text class="sm" x="560" y="732">RXD → GPIO19</text>
+  <text class="sm" x="560" y="782">GPIO20 → TXD</text>
+  <path class="wire" stroke="#0EA5E9" d="M530 628 H560"/><text class="net" x="566" y="645" fill="#0EA5E9">3V3</text>
+  <path class="wire" stroke="#0EA5E9" d="M530 788 H560"/><text class="net" x="566" y="805" fill="#0EA5E9">3V3</text>
+
+  <!-- XIAO -->
+  <rect class="esp" x="760" y="540" width="200" height="200" rx="12"/>
+  <text class="h2" x="790" y="566">XIAO ESP32-C6</text>
+  <text class="pin" x="772" y="585">D7 · GPIO17</text>
+  <text class="pin" x="772" y="610">D6 · GPIO16</text>
+  <text class="pin" x="772" y="660">D8 · GPIO19</text>
+  <text class="pin" x="772" y="685">D9 · GPIO20</text>
+  <text class="pin" x="948" y="610" text-anchor="end">5V</text>
+  <text class="pin" x="948" y="650" text-anchor="end">GND</text>
+  <text class="pin" x="948" y="690" text-anchor="end">3V3</text>
+  <path class="wire" stroke="#111827" d="M960 645 H990"/><text class="net" x="996" y="650" fill="#111827">GND</text>
+  <path class="wire" stroke="#0EA5E9" d="M960 685 H990"/><text class="net" x="996" y="690" fill="#0EA5E9">3V3 → both SLP</text>
+
+  <!-- MP1584 + diode -->
+  <rect class="box" x="990" y="430" width="160" height="70" rx="8"/>
+  <text class="h2" x="1006" y="456">MP1584</text>
+  <text class="sm" x="1006" y="474">12 V → 5.0 V</text>
+  <text class="sm" x="1006" y="490">set before connecting!</text>
+  <path class="wire" stroke="#DC2626" d="M960 445 H990"/><text class="net" x="954" y="450" text-anchor="end" fill="#DC2626">+12V</text>
+  <path class="wire" stroke="#111827" d="M960 480 H990"/><text class="net" x="954" y="485" text-anchor="end" fill="#111827">GND</text>
+  <path class="wire" stroke="#F59E0B" d="M1100 500 V605 H1060"/>
+  <polygon points="1060,593 1060,617 1036,605" fill="#F59E0B"/>
+  <line x1="1034" y1="592" x2="1034" y2="618" stroke="#F59E0B" stroke-width="3.5"/>
+  <path class="wire" stroke="#F59E0B" d="M1034 605 H960"/>
+  <text class="sm" x="1112" y="560">5 V</text>
+  <text class="sm" x="1022" y="586">1N5819</text>
+
+  <!-- notes -->
+  <text class="sm" x="760" y="790">Pins as in example/ogeneral-ac.yaml.</text>
+  <text class="sm" x="760" y="808">The 1N5819 lets USB and the 5 V rail be</text>
+  <text class="sm" x="760" y="826">connected at the same time.</text>
+</svg>

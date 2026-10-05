@@ -1,0 +1,130 @@
+# O General / Fujitsu General legacy wired-remote bridge — example config.
+# Board: Seeed XIAO ESP32-C6 (silk labels != GPIO numbers, see README). Two TJA1021 LIN modules:
+#   "A" = wall remote side:   RXD -> GPIO17 (D7), TXD <- GPIO16 (D6)
+#   "B" = AC indoor unit side: RXD -> GPIO19 (D8), TXD <- GPIO20 (D9)
+# Both modules: SLP -> 3V3, GND -> GND, 12V/VIN + GND from the bus.
+# The bridge also re-routes UART0 RX to "A" and UART1 RX to "B", so keep the two uart blocks below in this order.
+
+substitutions:
+  name: ogeneral-ac
+  friendly_name: O General AC
+
+external_components:
+  - source: github://aks4kj/esphome-ogeneral-legacy
+    components: [ogeneral, ogeneral_bridge]
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+
+esp32:
+  board: esp32-c6-devkitc-1
+  variant: esp32c6
+  framework:
+    type: esp-idf
+
+logger:
+  level: DEBUG
+  hardware_uart: USB_SERIAL_JTAG   # keep the UART peripherals free for the AC bus
+
+api:
+  encryption:
+    key: !secret api_key
+  actions:
+    # raw injection helpers for experiments; the climate entity does not need them
+    - action: ogeneral_inject
+      variables:
+        hex: string
+      then:
+        - lambda: 'id(og_bridge)->inject_hex(hex);'
+    - action: ogeneral_inject_bits
+      variables:
+        bits: string
+      then:
+        - lambda: 'id(og_bridge)->inject_bits(bits);'
+
+ota:
+  platform: esphome
+  password: !secret ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  power_save_mode: none   # mains powered; the default LIGHT mode adds 100-1000 ms command latency
+  ap:
+    ssid: "${friendly_name} Fallback"
+
+captive_portal:
+
+# XIAO ESP32-C6 RF switch: GPIO3 low = RF switch on, GPIO14 low = onboard antenna
+switch:
+  - platform: gpio
+    id: rf_switch_enable
+    pin: GPIO3
+    restore_mode: ALWAYS_OFF
+    internal: true
+  - platform: gpio
+    id: rf_antenna_select
+    pin: GPIO14
+    restore_mode: ALWAYS_OFF
+    internal: true
+
+uart:
+  # wall remote side (A) — listen only; logs every frame that differs from the previous one
+  - id: acbus
+    rx_pin:
+      number: GPIO17
+      mode:
+        input: true
+        pullup: true          # TJA1021 RXD is open-drain
+    baud_rate: 500
+    data_bits: 8
+    parity: ODD               # the bus has a 9th bit that is not real parity; ODD framing reads the bytes fine
+    stop_bits: 1
+    rx_buffer_size: 512
+    debug:
+      direction: RX
+      after:
+        timeout: 30ms         # one byte at 500 baud = 22 ms; the gap between frames is longer
+      sequence:
+        - lambda: |-
+            static std::string last;
+            std::string raw;
+            char b[4];
+            for (auto c : bytes) { snprintf(b, sizeof(b), "%02X ", c); raw += b; }
+            if (raw == last) return;   // the idle exchange repeats ~4x/s and would flood the log
+            last = raw;
+            ESP_LOGI("remote_side", "len=%u [%s]", (unsigned) bytes.size(), raw.c_str());
+
+  # AC side (B) — read by the climate entity, so it shows what the AC really does
+  - id: acbus_b
+    rx_pin:
+      number: GPIO19
+      mode:
+        input: true
+        pullup: true
+    baud_rate: 500
+    data_bits: 8
+    parity: ODD
+    stop_bits: 1
+    rx_buffer_size: 512
+
+ogeneral_bridge:
+  id: og_bridge
+  a_rx: 17   # wall remote side
+  a_tx: 16
+  b_rx: 19   # AC indoor unit side
+  b_tx: 20
+  forward: true
+
+climate:
+  - platform: ogeneral
+    uart_id: acbus_b
+    name: "AC"
+
+interval:
+  - interval: 10ms
+    then:
+      - lambda: |-
+          uint8_t b;
+          while (id(acbus).available()) id(acbus).read_byte(&b);   // drain the remote side -> feeds the debug log

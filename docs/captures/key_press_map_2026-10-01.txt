@@ -1,0 +1,14 @@
+19:45:33 FAN -> display AUTO : byte4=52 byte5=FD
+19:46:01 FAN -> HIGH : byte4=56
+19:46:23 FAN -> MID : byte4=55
+19:46:45 FAN -> LOW : byte4=53
+19:47:08 TEMP+ -> 22C (fan LOW) : byte4=4B
+19:47:40 TEMP+ -> 23C (fan LOW) : byte4=43  => byte4 = ((31-T)<<3)|fan CONFIRMED
+19:48:08 MASTER -> FAN mode : byte4=F6 (temp field=30 special?, fan bits=6)
+   display in FAN mode shows LOW -> low bits 6 in F6 are NOT fan speed in FAN mode
+19:48:54 FAN mode + FAN->AUTO : byte4=F4
+19:49:25 FAN mode + HIGH : byte4=FC  => hypothesis FAN mode byte4 = 0xF0 | (fan<<1) (AUTO 4, LOW 6, HIGH C; predict MID A -> 0xFA)
+19:49:50 FAN mode + MID : byte4=FA  => FAN mode formula CONFIRMED
+19:50:57 START/STOP -> OFF : remote sends '80 DB FC' + '80 EB FC' (short), idle becomes '80 D7 EC F7 80 E7 EC B7 7F' (E8->EC = OFF). Display shows only clock.
+19:52:36 START/STOP -> ON : remote sends full state packet (FA = FAN mode MID), idle back to E8 (ON)
+19:53:35 MASTER->COOL (23C MID): byte4=45 (formula OK); 19:53:42 ENERGY SAVE ON: byte5 FD->BD (bit 0x40 cleared = eco on); button LED lights, LCD unchanged
